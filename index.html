@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 正在更新</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0078d4;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .windows-logo {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 3s infinite;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #00bc12;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(
+                -45deg, 
+                rgba(255, 255, 255, 0.2) 25%, 
+                transparent 25%, 
+                transparent 50%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.2) 75%, 
+                transparent 75%, 
+                transparent
+            );
+            background-size: 50px 50px;
+            animation: moveStripes 2s linear infinite;
+        }
+        
+        .percentage {
+            font-size: 3rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .details {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+        
+        .tip {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 20px;
+        }
+        
+        .dots {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: white;
+            margin: 0 5px;
+            opacity: 0.5;
+        }
+        
+        .dot.active {
+            opacity: 1;
+            animation: dotPulse 1.5s infinite;
+        }
+        
+        .dot:nth-child(1) { animation-delay: 0s; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+        
+        .hint {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .hint:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            text-align: left;
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 15px;
+            color: #0078d4;
+        }
+        
+        .modal-content ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .modal-content li {
+            margin-bottom: 8px;
+        }
+        
+        .close-modal {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+        
+        /* 动画 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes moveStripes {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 0; }
+        }
+        
+        @keyframes dotPulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .subtitle { font-size: 1.1rem; }
+            .windows-logo { font-size: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="windows-logo"></div>
+    
+    <div class="container">
+        <h1>Windows 正在更新</h1>
+        <div class="subtitle">请不要关闭计算机</div>
+        
+        <div class="percentage" id="percentage">0%</div>
+        <div class="details" id="details">正在准备更新...</div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="dots">
+            <div class="dot active"></div>
+            <div class="dot active"></div>
+            <div class="dot active"></div>
+        </div>
+        
+        <div class="tip">这可能需要几分钟时间，计算机将自动重新启动几次</div>
+    </div>
+    
+    <div class="hint" id="hintBtn">摸鱼提示</div>
+    
+    <div class="footer">
+        2026 © 腾讯元宝 | 当前时间: <span id="currentTime"></span>
+    </div>
+    
+    <!-- 提示模态框 -->
+    <div class="modal" id="hintModal">
+        <div class="modal-content">
+            <h3>摸鱼小贴士</h3>
+            <p>这是一个模拟Windows更新的页面，适合在办公室需要短暂休息时使用：</p>
+            <ul>
+                <li>打开此页面后，看起来就像系统正在更新</li>
+                <li>进度条会自动前进，显示各种更新状态</li>
+                <li>按F11可切换到全屏模式，效果更逼真</li>
+                <li>点击页面其他区域可关闭此提示</li>
+                <li>注意：这只是一个模拟页面，不会真正更新系统</li>
+            </ul>
+            <button class="close-modal" id="closeModal">知道了</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBar = document.getElementById('progressBar');
+            const percentage = document.getElementById('percentage');
+            const details = document.getElementById('details');
+            const hintBtn = document.getElementById('hintBtn');
+            const hintModal = document.getElementById('hintModal');
+            const closeModal = document.getElementById('closeModal');
+            const currentTime = document.getElementById('currentTime');
+            
+            // 更新当前时间
+            function updateTime() {
+                const now = new Date();
+                const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                                  now.getMinutes().toString().padStart(2, '0') + ':' + 
+                                  now.getSeconds().toString().padStart(2, '0');
+                currentTime.textContent = timeString;
+            }
+            
+            setInterval(updateTime, 1000);
+            updateTime();
+            
+            // 模拟进度
+            let progress = 0;
+            const updateMessages = [
+                "正在准备更新...",
+                "正在检查更新...",
+                "正在下载更新 1/12...",
+                "正在下载更新 2/12...",
+                "正在下载更新 3/12...",
+                "正在安装更新 1/12...",
+                "正在安装更新 2/12...",
+                "正在安装更新 3/12...",
+                "正在配置系统设置...",
+                "正在清理临时文件...",
+                "正在准备重启...",
+                "更新几乎完成，请不要关闭计算机"
+            ];
+            
+            const updateInterval = setInterval(() => {
+                // 模拟进度的随机增加
+                let increment = Math.random() * 3;
+                
+                // 在特定进度时模拟延迟
+                if (progress > 20 && progress < 30) {
+                    increment = 0.1; // 模拟卡在某个进度
+                } else if (progress > 70 && progress < 80) {
+                    increment = 0.05; // 模拟接近完成时的缓慢
+                } else if (progress > 90) {
+                    increment = 0.5; // 最后阶段慢一点
+                } else if (progress > 98) {
+                    increment = 0.1; // 最后一点点非常慢
+                }
+                
+                progress += increment;
+                
+                // 防止超过100%
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(updateInterval);
+                    
+                    // 在100%停留一段时间后重置
+                    setTimeout(() => {
+                        progress = 0;
+                        startProgress();
+                    }, 3000);
+                }
+                
+                // 更新进度条和百分比
+                progressBar.style.width = progress + '%';
+                percentage.textContent = Math.floor(progress) + '%';
+                
+                // 根据进度更新消息
+                const messageIndex = Math.min(
+                    Math.floor(progress / (100 / updateMessages.length)), 
+                    updateMessages.length - 1
+                );
+                details.textContent = updateMessages[messageIndex];
+                
+            }, 300);
+            
+            // 开始进度函数
+            function startProgress() {
+                // 这里不需要重新设置，因为上面的interval会继续运行
+            }
+            
+            // 提示模态框控制
+            hintBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                hintModal.style.display = 'flex';
+            });
+            
+            closeModal.addEventListener('click', function() {
+                hintModal.style.display = 'none';
+            });
+            
+            hintModal.addEventListener('click', function(e) {
+                if (e.target === hintModal) {
+                    hintModal.style.display = 'none';
+                }
+            });
+            
+            // 按F11切换全屏提示
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F11') {
+                    alert('按F11可切换全屏模式，使更新界面更逼真。再次按F11退出全屏。');
+                }
+                
+                // 按ESC关闭模态框
+                if (e.key === 'Escape') {
+                    hintModal.style.display = 'none';
+                }
+            });
+            
+            // 添加点击页面其他地方关闭模态框的功能
+            document.addEventListener('click', function(e) {
+                if (!hintBtn.contains(e.target) && hintModal.style.display === 'flex') {
+                    hintModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
