@@ -442,7 +442,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化变量
-            let foods = ["快餐","拉面"];
+            let foods = ["快餐","拉面","油泼面","菠菜面","麻辣烫","螺蛳粉","水盆羊肉",
+                         "泡馍","过桥米线","酸辣粉","饺子","三秦套餐","油条豆腐脑",
+                         "臊子面","疯狂星期四","不吃了"];
             let isSpinning = false;
             let currentRotation = 0;
             let spinAnimation = null;
@@ -572,12 +574,6 @@
             
             // 添加示例食物
             function addExampleFoods() {
-                const exampleFoods = [
-                    "火锅", "披萨", "寿司", "烧烤", 
-                    "麻辣烫", "汉堡", "拉面", "咖喱饭"
-                ];
-                
-                foods.push(...exampleFoods);
                 updateFoodList();
                 drawWheel();
                 foodCount.textContent = `${foods.length} 项`;
