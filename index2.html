@@ -3,11 +3,737 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>what do you what to eat?</tittle>
-    <link rel=stylesheet href="style.css">
-    <link rel=stylesheet href="">
+    <title>美食转盘抽奖系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.8s ease;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+        
+        .left-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #e63946;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .food-input-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #1d3557;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #e63946;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #a8dadc;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #457b9d;
+            box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.2);
+        }
+        
+        button {
+            padding: 14px 24px;
+            background: #1d3557;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: #457b9d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .add-btn {
+            background: #2a9d8f;
+        }
+        
+        .add-btn:hover {
+            background: #1d7879;
+        }
+        
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .spin-btn {
+            background: #e63946;
+        }
+        
+        .spin-btn:hover {
+            background: #d90429;
+        }
+        
+        .reset-btn {
+            background: #6d6875;
+        }
+        
+        .reset-btn:hover {
+            background: #5a5568;
+        }
+        
+        .current-foods {
+            background: #f1faee;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 150px;
+        }
+        
+        .food-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .food-item {
+            background: #a8dadc;
+            color: #1d3557;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .food-item i {
+            cursor: pointer;
+            color: #e63946;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto 30px;
+        }
+        
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .wheel-center {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #1d3557;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 60px;
+            z-index: 5;
+        }
+        
+        .pointer:before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid #e63946;
+        }
+        
+        .result {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1d3557;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .result-text {
+            color: #e63946;
+        }
+        
+        .background-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .bg-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .bg-option:hover {
+            transform: scale(1.05);
+        }
+        
+        .bg-option.active {
+            border-color: #1d3557;
+            box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.2);
+        }
+        
+        .bg-1 {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .bg-2 {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        .bg-3 {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+        }
+        
+        .bg-4 {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        }
+        
+        .bg-5 {
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+        }
+        
+        .bg-6 {
+            background: linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%);
+        }
+        
+        .instructions {
+            background: rgba(29, 53, 87, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            color: #1d3557;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        .spin-animation {
+            animation: spin 0.1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-message {
+            color: #6d6875;
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="left-panel">
+            <h1><i class="fas fa-utensils"></i> 美食转盘抽奖系统</h1>
+            
+            <div class="food-input-section">
+                <div class="section-title">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>添加美食选项</span>
+                </div>
+                <p style="color: #6d6875; margin-bottom: 15px;">支持单个添加或用逗号分隔批量添加（例如：火锅, 披萨, 寿司）</p>
+                <div class="input-group">
+                    <input type="text" id="foodInput" placeholder="输入美食名称，例如：麻辣烫">
+                    <button id="addBtn" class="add-btn">
+                        <i class="fas fa-plus"></i> 添加
+                    </button>
+                </div>
+                
+                <div class="control-buttons">
+                    <button id="spinBtn" class="spin-btn">
+                        <i class="fas fa-play"></i> 开始旋转
+                    </button>
+                    <button id="resetBtn" class="reset-btn">
+                        <i class="fas fa-redo"></i> 重置所有
+                    </button>
+                </div>
+            </div>
+            
+            <div class="current-foods">
+                <div class="section-title">
+                    <i class="fas fa-list"></i>
+                    <span>当前美食列表</span>
+                    <span id="foodCount" style="margin-left: auto; color: #e63946; font-weight: bold;">0 项</span>
+                </div>
+                <div id="foodList" class="food-list">
+                    <div class="empty-message">暂无美食，请添加美食选项</div>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>使用说明</span>
+                </div>
+                <ul>
+                    <li>输入美食名称，点击"添加"按钮或按Enter键添加到转盘</li>
+                    <li>支持用逗号分隔批量添加多个美食（例如：烧烤, 拉面, 咖喱饭）</li>
+                    <li>点击美食项旁边的<i class="fas fa-times" style="color: #e63946; font-size: 0.8rem;"></i>可删除该项</li>
+                    <li>点击"开始旋转"启动转盘抽奖</li>
+                    <li>点击"重置所有"清空所有美食选项</li>
+                    <li>下方可以选择不同的背景主题</li>
+                </ul>
+            </div>
+            
+            <div class="background-selector">
+                <div class="section-title">
+                    <i class="fas fa-palette"></i>
+                    <span>切换背景</span>
+                </div>
+                <div class="bg-option bg-1 active" data-bg="1"></div>
+                <div class="bg-option bg-2" data-bg="2"></div>
+                <div class="bg-option bg-3" data-bg="3"></div>
+                <div class="bg-option bg-4" data-bg="4"></div>
+                <div class="bg-option bg-5" data-bg="5"></div>
+                <div class="bg-option bg-6" data-bg="6"></div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                <div class="wheel-center">
+                    <i class="fas fa-utensils"></i>
+                </div>
+            </div>
+            
+            <div class="result">
+                <div id="resultText">等待抽奖...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化变量
+            let foods = [];
+            let isSpinning = false;
+            let currentRotation = 0;
+            let spinAnimation = null;
+            
+            // DOM元素
+            const foodInput = document.getElementById('foodInput');
+            const addBtn = document.getElementById('addBtn');
+            const spinBtn = document.getElementById('spinBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const foodList = document.getElementById('foodList');
+            const foodCount = document.getElementById('foodCount');
+            const wheelCanvas = document.getElementById('wheelCanvas');
+            const resultText = document.getElementById('resultText');
+            const ctx = wheelCanvas.getContext('2d');
+            const bgOptions = document.querySelectorAll('.bg-option');
+            
+            // 颜色数组 - 用于转盘扇区
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', 
+                '#118AB2', '#073B4C', '#EF476F', '#7209B7',
+                '#3A86FF', '#FB5607', '#8338EC', '#FF006E'
+            ];
+            
+            // 初始化 - 添加示例数据
+            addExampleFoods();
+            
+            // 绘制转盘
+            function drawWheel() {
+                const centerX = wheelCanvas.width / 2;
+                const centerY = wheelCanvas.height / 2;
+                const radius = Math.min(centerX, centerY) - 10;
+                
+                // 清空画布
+                ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+                
+                // 如果没有食物，绘制空转盘
+                if (foods.length === 0) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#F1FAEE';
+                    ctx.fill();
+                    ctx.strokeStyle = '#1D3557';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // 绘制文本
+                    ctx.fillStyle = '#6D6875';
+                    ctx.font = 'bold 20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('请添加美食', centerX, centerY - 10);
+                    ctx.font = '16px Arial';
+                    ctx.fillText('点击左侧"添加"按钮', centerX, centerY + 20);
+                    return;
+                }
+                
+                // 计算每个扇区的角度
+                const angleStep = (2 * Math.PI) / foods.length;
+                let startAngle = 0;
+                
+                // 绘制每个扇区
+                for (let i = 0; i < foods.length; i++) {
+                    const endAngle = startAngle + angleStep;
+                    
+                    // 绘制扇区
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                    ctx.closePath();
+                    
+                    // 设置颜色
+                    ctx.fillStyle = colors[i % colors.length];
+                    ctx.fill();
+                    
+                    // 绘制扇区边框
+                    ctx.strokeStyle = '#1D3557';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // 绘制扇区文本
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(startAngle + angleStep / 2);
+                    
+                    ctx.fillStyle = '#1D3557';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(foods[i], radius - 20, 5);
+                    
+                    ctx.restore();
+                    
+                    startAngle = endAngle;
+                }
+            }
+            
+            // 添加食物函数
+            function addFood() {
+                const input = foodInput.value.trim();
+                if (!input) return;
+                
+                // 支持逗号分隔批量添加
+                const newFoods = input.split(',').map(food => food.trim()).filter(food => food);
+                
+                // 添加到食物数组
+                newFoods.forEach(food => {
+                    if (food && !foods.includes(food)) {
+                        foods.push(food);
+                    }
+                });
+                
+                // 清空输入框
+                foodInput.value = '';
+                
+                // 更新UI
+                updateFoodList();
+                drawWheel();
+                
+                // 更新计数
+                foodCount.textContent = `${foods.length} 项`;
+            }
+            
+            // 添加示例食物
+            function addExampleFoods() {
+                const exampleFoods = [
+                    "火锅", "披萨", "寿司", "烧烤", 
+                    "麻辣烫", "汉堡", "拉面", "咖喱饭"
+                ];
+                
+                foods.push(...exampleFoods);
+                updateFoodList();
+                drawWheel();
+                foodCount.textContent = `${foods.length} 项`;
+            }
+            
+            // 更新食物列表显示
+            function updateFoodList() {
+                foodList.innerHTML = '';
+                
+                if (foods.length === 0) {
+                    foodList.innerHTML = '<div class="empty-message">暂无美食，请添加美食选项</div>';
+                    return;
+                }
+                
+                foods.forEach((food, index) => {
+                    const foodItem = document.createElement('div');
+                    foodItem.className = 'food-item';
+                    foodItem.innerHTML = `
+                        <span>${food}</span>
+                        <i class="fas fa-times delete-food" data-index="${index}"></i>
+                    `;
+                    foodList.appendChild(foodItem);
+                });
+                
+                // 添加删除事件
+                document.querySelectorAll('.delete-food').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        foods.splice(index, 1);
+                        updateFoodList();
+                        drawWheel();
+                        foodCount.textContent = `${foods.length} 项`;
+                    });
+                });
+            }
+            
+            // 旋转转盘
+            function spinWheel() {
+                if (isSpinning || foods.length === 0) return;
+                
+                isSpinning = true;
+                spinBtn.disabled = true;
+                resultText.textContent = "抽奖中...";
+                
+                // 生成随机停止位置
+                const spinDuration = 3000; // 旋转持续时间（毫秒）
+                const spins = 5 + Math.random() * 3; // 旋转圈数
+                const randomIndex = Math.floor(Math.random() * foods.length);
+                const anglePerFood = 360 / foods.length;
+                const targetAngle = 360 * spins + (randomIndex * anglePerFood);
+                
+                // 开始旋转动画
+                let startTime = null;
+                let startRotation = currentRotation;
+                
+                function animate(currentTime) {
+                    if (!startTime) startTime = currentTime;
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / spinDuration, 1);
+                    
+                    // 缓动函数，使旋转先快后慢
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    currentRotation = startRotation + (targetAngle * easeOut);
+                    
+                    // 应用旋转
+                    wheelCanvas.style.transform = `rotate(${currentRotation}deg)`;
+                    
+                    if (progress < 1) {
+                        spinAnimation = requestAnimationFrame(animate);
+                    } else {
+                        // 旋转结束
+                        isSpinning = false;
+                        spinBtn.disabled = false;
+                        currentRotation = currentRotation % 360;
+                        
+                        // 显示结果
+                        const resultIndex = foods.length - 1 - Math.floor(((currentRotation % 360) / 360) * foods.length);
+                        const selectedFood = foods[resultIndex % foods.length];
+                        
+                        resultText.innerHTML = `恭喜！选中: <span class="result-text">${selectedFood}</span>`;
+                        
+                        // 添加庆祝效果
+                        celebrate();
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // 庆祝效果
+            function celebrate() {
+                const resultElement = document.querySelector('.result');
+                resultElement.style.transform = 'scale(1.1)';
+                resultElement.style.boxShadow = '0 10px 30px rgba(230, 57, 70, 0.3)';
+                resultElement.style.transition = 'all 0.3s';
+                
+                setTimeout(() => {
+                    resultElement.style.transform = 'scale(1)';
+                    resultElement.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+                }, 500);
+            }
+            
+            // 重置所有食物
+            function resetFoods() {
+                if (isSpinning) {
+                    cancelAnimationFrame(spinAnimation);
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                }
+                
+                foods = [];
+                currentRotation = 0;
+                wheelCanvas.style.transform = 'rotate(0deg)';
+                resultText.textContent = "等待抽奖...";
+                updateFoodList();
+                drawWheel();
+                foodCount.textContent = "0 项";
+            }
+            
+            // 切换背景
+            function changeBackground(bgIndex) {
+                const bgClasses = [
+                    'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                    'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+                    'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
+                    'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)',
+                    'linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%)'
+                ];
+                
+                document.body.style.background = bgClasses[bgIndex - 1];
+                
+                // 更新活动状态
+                bgOptions.forEach(option => {
+                    option.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+            
+            // 事件监听
+            addBtn.addEventListener('click', addFood);
+            
+            foodInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addFood();
+                }
+            });
+            
+            spinBtn.addEventListener('click', spinWheel);
+            
+            resetBtn.addEventListener('click', resetFoods);
+            
+            bgOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const bgIndex = this.getAttribute('data-bg');
+                    changeBackground(bgIndex);
+                });
+            });
+            
+            // 初始绘制
+            drawWheel();
+        });
+    </script>
 </body>
-    
 </html>
