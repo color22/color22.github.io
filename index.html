@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>美食转盘抽奖系统</title>
+    <title>都怪华子不知道吃啥</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -359,7 +359,7 @@
 <body>
     <div class="container">
         <div class="left-panel">
-            <h1><i class="fas fa-utensils"></i> 美食转盘抽奖系统</h1>
+            <h1><i class="fas fa-utensils"></i> 都怪华子不知道吃啥</h1>
             
             <div class="food-input-section">
                 <div class="section-title">
@@ -387,7 +387,7 @@
             <div class="current-foods">
                 <div class="section-title">
                     <i class="fas fa-list"></i>
-                    <span>当前美食列表</span>
+                    <span>美食列表</span>
                     <span id="foodCount" style="margin-left: auto; color: #e63946; font-weight: bold;">0 项</span>
                 </div>
                 <div id="foodList" class="food-list">
@@ -434,7 +434,7 @@
             </div>
             
             <div class="result">
-                <div id="resultText">等待抽奖...</div>
+                <div id="resultText">等待选择...</div>
             </div>
         </div>
     </div>
@@ -687,7 +687,7 @@
                 foods = [];
                 currentRotation = 0;
                 wheelCanvas.style.transform = 'rotate(0deg)';
-                resultText.textContent = "等待抽奖...";
+                resultText.textContent = "等待选择...";
                 updateFoodList();
                 drawWheel();
                 foodCount.textContent = "0 项";
