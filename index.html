@@ -526,9 +526,16 @@
                     ctx.translate(centerX, centerY);
                     ctx.rotate(startAngle + angleStep / 2);
                     
-                    ctx.fillStyle = '#1D3557';
+                    // 设置字体颜色为白色，添加黑色描边以提高可读性
+                    ctx.fillStyle = 'white';
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
                     ctx.font = 'bold 16px Arial';
                     ctx.textAlign = 'right';
+                    
+                    // 先绘制文字描边
+                    ctx.strokeText(foods[i], radius - 20, 5);
+                    // 再绘制填充文字
                     ctx.fillText(foods[i], radius - 20, 5);
                     
                     ctx.restore();
