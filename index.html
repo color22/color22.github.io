@@ -6,6 +6,70 @@
     <title>都怪华子不知道吃啥</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 添加下班倒计时样式 */
+        .countdown-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            border: 2px solid #1d3557;
+            min-width: 200px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .countdown-title {
+            font-size: 1rem;
+            color: #1d3557;
+            margin-bottom: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .countdown-time {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e63946;
+            margin: 5px 0;
+        }
+        
+        .countdown-message {
+            font-size: 0.9rem;
+            color: #2a9d8f;
+            font-weight: 600;
+        }
+        
+        .countdown-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .status-working {
+            background-color: #e9f5db;
+            color: #2a9d8f;
+        }
+        
+        .status-off {
+            background-color: #ffd6d6;
+            color: #e63946;
+        }
+        
+        .status-holiday {
+            background-color: #ffeaa7;
+            color: #e17055;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -336,6 +400,16 @@
             h1 {
                 font-size: 1.8rem;
             }
+            
+            /* 移动端调整倒计时位置 */
+            .countdown-container {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 0 auto 20px;
+                width: 100%;
+                max-width: 300px;
+            }
         }
         
         .spin-animation {
@@ -357,6 +431,17 @@
     </style>
 </head>
 <body>
+    <!-- 下班倒计时容器 -->
+    <div class="countdown-container">
+        <div class="countdown-title">
+            <i class="fas fa-clock"></i>
+            <span>下班倒计时</span>
+        </div>
+        <div class="countdown-time" id="countdownTime">00:00:00</div>
+        <div class="countdown-message" id="countdownMessage">计算中...</div>
+        <div class="countdown-status" id="countdownStatus"></div>
+    </div>
+    
     <div class="container">
         <div class="left-panel">
             <h1><i class="fas fa-utensils"></i> 都怪华子不知道吃啥</h1>
@@ -425,6 +510,108 @@
     </div>
 
     <script>
+        // 下班倒计时功能
+        function updateCountdown() {
+            const now = new Date();
+            const day = now.getDay(); // 0是周日，1-6是周一到周六
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            const startWork = 8; // 上班时间 8:00
+            const endWork = 17; // 下班时间 17:00
+            const endWorkMinutes = 30; // 下班分钟 30
+            
+            const countdownTime = document.getElementById('countdownTime');
+            const countdownMessage = document.getElementById('countdownMessage');
+            const countdownStatus = document.getElementById('countdownStatus');
+            
+            // 定义工作日（周一至周五）
+            const isWeekday = day >= 1 && day <= 5;
+            
+            // 定义2026年的节假日（示例，你可以根据需要调整）
+            const holidays2026 = [
+                '2026-01-01', // 元旦
+                '2026-01-28', '2026-01-29', '2026-01-30', '2026-01-31', '2026-02-01', '2026-02-02', '2026-02-03', // 春节
+                '2026-04-04', '2026-04-05', '2026-04-06', // 清明节
+                '2026-05-01', '2026-05-02', '2026-05-03', // 劳动节
+                '2026-06-20', '2026-06-21', '2026-06-22', // 端午节
+                '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07', // 国庆节
+            ];
+            
+            // 获取当前日期字符串
+            const currentDateStr = now.toISOString().split('T')[0];
+            
+            // 检查是否是节假日
+            const isHoliday = holidays2026.includes(currentDateStr);
+            
+            // 检查是否是周末调休的工作日（这里需要根据实际情况调整）
+            // 这里简单处理，你可以添加调休日期的逻辑
+            const extraWorkDays = []; // 添加调休的工作日，例如：['2026-10-10']
+            const isExtraWorkDay = extraWorkDays.includes(currentDateStr);
+            
+            // 判断今天是否上班
+            const shouldWorkToday = (isWeekday && !isHoliday) || isExtraWorkDay;
+            
+            if (!shouldWorkToday) {
+                // 今天不上班
+                countdownTime.textContent = "--:--:--";
+                countdownMessage.textContent = "今天不上班，好好休息！";
+                countdownStatus.textContent = "休息日";
+                countdownStatus.className = "countdown-status status-holiday";
+                return;
+            }
+            
+            // 计算当前时间到下班时间的倒计时
+            let timeLeft = '';
+            let message = '';
+            let status = '';
+            let statusClass = '';
+            
+            // 当前总分钟数
+            const currentTotalMinutes = hours * 60 + minutes;
+            // 上班时间总分钟数
+            const startWorkMinutes = startWork * 60;
+            // 下班时间总分钟数
+            const endWorkTotalMinutes = endWork * 60 + endWorkMinutes;
+            
+            if (currentTotalMinutes < startWorkMinutes) {
+                // 还没到上班时间
+                const timeUntilWork = startWorkMinutes - currentTotalMinutes;
+                const hoursLeft = Math.floor(timeUntilWork / 60);
+                const minutesLeft = timeUntilWork % 60;
+                const secondsLeft = 60 - seconds;
+                
+                countdownTime.textContent = `${hoursLeft.toString().padStart(2, '0')}:${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+                countdownMessage.textContent = "距离上班还有";
+                countdownStatus.textContent = "还没上班";
+                countdownStatus.className = "countdown-status status-off";
+            } else if (currentTotalMinutes >= startWorkMinutes && currentTotalMinutes < endWorkTotalMinutes) {
+                // 工作时间段内
+                const timeUntilEnd = endWorkTotalMinutes - currentTotalMinutes;
+                const hoursLeft = Math.floor(timeUntilEnd / 60);
+                const minutesLeft = timeUntilEnd % 60;
+                const secondsLeft = 60 - seconds;
+                
+                countdownTime.textContent = `${hoursLeft.toString().padStart(2, '0')}:${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+                countdownMessage.textContent = "距离下班还有";
+                countdownStatus.textContent = "工作中";
+                countdownStatus.className = "countdown-status status-working";
+            } else {
+                // 下班时间后
+                countdownTime.textContent = "00:00:00";
+                countdownMessage.textContent = "下班啦，玩得开心！";
+                countdownStatus.textContent = "已下班";
+                countdownStatus.className = "countdown-status status-off";
+            }
+        }
+        
+        // 初始更新倒计时
+        updateCountdown();
+        
+        // 每秒更新一次倒计时
+        setInterval(updateCountdown, 1000);
+
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化变量
             let foods = ["快餐","拉面","油泼面","菠菜面","麻辣烫","螺蛳粉","水盆羊肉",
