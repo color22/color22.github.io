@@ -6,7 +6,7 @@
     <title>都怪华子不知道吃啥</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 添加下班倒计时样式 */
+        /* 下班倒计时样式 */
         .countdown-container {
             position: fixed;
             top: 20px;
@@ -17,7 +17,7 @@
             padding: 15px 20px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
             border: 2px solid #1d3557;
-            min-width: 200px;
+            min-width: 220px;
             text-align: center;
             backdrop-filter: blur(5px);
         }
@@ -68,6 +68,18 @@
         .status-holiday {
             background-color: #ffeaa7;
             color: #e17055;
+        }
+        
+        .api-status {
+            font-size: 0.7rem;
+            margin-top: 8px;
+            color: #6c757d;
+        }
+        
+        .loading {
+            display: none;
+            font-size: 0.8rem;
+            color: #6c757d;
         }
         
         * {
@@ -291,15 +303,6 @@
             z-index: 5;
         }
         
-        .pointer:before {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-        }
-        
         .result {
             text-align: center;
             font-size: 2rem;
@@ -401,7 +404,6 @@
                 font-size: 1.8rem;
             }
             
-            /* 移动端调整倒计时位置 */
             .countdown-container {
                 position: relative;
                 top: 0;
@@ -438,8 +440,12 @@
             <span>下班倒计时</span>
         </div>
         <div class="countdown-time" id="countdownTime">00:00:00</div>
-        <div class="countdown-message" id="countdownMessage">计算中...</div>
+        <div class="countdown-message" id="countdownMessage">加载中...</div>
         <div class="countdown-status" id="countdownStatus"></div>
+        <div class="api-status" id="apiStatus">正在获取节假日信息...</div>
+        <div class="loading" id="loadingIndicator">
+            <i class="fas fa-spinner fa-spin"></i> 更新中...
+        </div>
     </div>
     
     <div class="container">
@@ -511,9 +517,177 @@
 
     <script>
         // 下班倒计时功能
+        let holidayData = []; // 存储节假日数据
+        let holidayApiStatus = 'loading'; // API状态: loading, success, error
+        
+        // 获取节假日API数据
+        async function fetchHolidayData() {
+            const apiStatus = document.getElementById('apiStatus');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            try {
+                loadingIndicator.style.display = 'block';
+                apiStatus.textContent = "正在获取节假日信息...";
+                
+                // 使用多个节假日API接口，增加成功率
+                const apiUrls = [
+                    // 接口1: 聚合数据API (需要注册获取key，这里使用演示key)
+                    'https://v0.yiketianqi.com/free/day?appid=43656176&appsecret=I42og6Lm&unescape=1',
+                    // 接口2: 天气API，可获取节假日信息
+                    'https://api.oioweb.cn/api/qq/holiday',
+                    // 接口3: 备用接口
+                    'https://timor.tech/api/holiday/info/' + new Date().toISOString().split('T')[0]
+                ];
+                
+                let success = false;
+                
+                // 尝试每个接口
+                for (let i = 0; i < apiUrls.length; i++) {
+                    try {
+                        const response = await fetch(apiUrls[i], {
+                            method: 'GET',
+                            mode: 'cors',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('API响应数据:', data);
+                            
+                            // 根据不同API的返回格式解析节假日信息
+                            holidayData = parseHolidayData(data);
+                            holidayApiStatus = 'success';
+                            success = true;
+                            
+                            // 如果获取到数据，保存到localStorage
+                            localStorage.setItem('holidayData', JSON.stringify({
+                                data: holidayData,
+                                timestamp: new Date().getTime()
+                            }));
+                            
+                            apiStatus.textContent = "节假日信息已更新";
+                            break;
+                        }
+                    } catch (error) {
+                        console.log(`接口${i+1}失败:`, error);
+                        continue;
+                    }
+                }
+                
+                if (!success) {
+                    throw new Error('所有API接口都失败了');
+                }
+                
+            } catch (error) {
+                console.error('获取节假日信息失败:', error);
+                holidayApiStatus = 'error';
+                apiStatus.textContent = "节假日API获取失败，使用本地数据";
+                
+                // 尝试从localStorage获取缓存的节假日数据
+                const cachedData = localStorage.getItem('holidayData');
+                if (cachedData) {
+                    const parsedData = JSON.parse(cachedData);
+                    // 检查缓存是否在24小时内
+                    if (new Date().getTime() - parsedData.timestamp < 24 * 60 * 60 * 1000) {
+                        holidayData = parsedData.data;
+                        holidayApiStatus = 'cached';
+                        apiStatus.textContent = "使用缓存的节假日数据";
+                    }
+                }
+                
+                // 如果还是没有数据，使用内置的2026年节假日数据
+                if (holidayData.length === 0) {
+                    holidayData = getDefaultHolidays();
+                    apiStatus.textContent = "使用默认节假日数据";
+                }
+            } finally {
+                loadingIndicator.style.display = 'none';
+                // 更新倒计时显示
+                updateCountdown();
+            }
+        }
+        
+        // 解析不同API返回的节假日数据
+        function parseHolidayData(data) {
+            const holidays = [];
+            const currentYear = new Date().getFullYear();
+            
+            // 根据不同API的返回格式解析
+            if (data && data.data && Array.isArray(data.data)) {
+                // 格式1: 聚合数据格式
+                data.data.forEach(item => {
+                    if (item.holiday) {
+                        holidays.push(item.date);
+                    }
+                });
+            } else if (data && data.holiday) {
+                // 格式2: timor API格式
+                holidays.push(data.date);
+            } else if (data && data.list && Array.isArray(data.list)) {
+                // 格式3: 其他API格式
+                data.list.forEach(item => {
+                    if (item.isHoliday) {
+                        holidays.push(item.date);
+                    }
+                });
+            }
+            
+            // 如果没有获取到节假日，使用默认的
+            if (holidays.length === 0) {
+                return getDefaultHolidays();
+            }
+            
+            return holidays;
+        }
+        
+        // 获取默认的节假日数据（2026年）
+        function getDefaultHolidays() {
+            const currentYear = new Date().getFullYear();
+            
+            // 中国法定节假日（2026年）
+            const holidays2026 = [
+                // 元旦
+                `${currentYear}-01-01`, `${currentYear}-01-02`, `${currentYear}-01-03`,
+                // 春节
+                `${currentYear}-01-28`, `${currentYear}-01-29`, `${currentYear}-01-30`,
+                `${currentYear}-01-31`, `${currentYear}-02-01`, `${currentYear}-02-02`, `${currentYear}-02-03`,
+                // 清明节
+                `${currentYear}-04-04`, `${currentYear}-04-05`, `${currentYear}-04-06`,
+                // 劳动节
+                `${currentYear}-05-01`, `${currentYear}-05-02`, `${currentYear}-05-03`,
+                // 端午节
+                `${currentYear}-06-20`, `${currentYear}-06-21`, `${currentYear}-06-22`,
+                // 中秋节
+                `${currentYear}-10-01`, `${currentYear}-10-02`, `${currentYear}-10-03`,
+                // 国庆节
+                `${currentYear}-10-01`, `${currentYear}-10-02`, `${currentYear}-10-03`,
+                `${currentYear}-10-04`, `${currentYear}-10-05`, `${currentYear}-10-06`, `${currentYear}-10-07`
+            ];
+            
+            return holidays2026;
+        }
+        
+        // 判断是否为工作日
+        function isWorkday(date) {
+            const day = date.getDay(); // 0=周日, 1=周一, ..., 6=周六
+            const dateStr = date.toISOString().split('T')[0]; // 格式: YYYY-MM-DD
+            
+            // 判断是否为周末
+            const isWeekend = day === 0 || day === 6;
+            
+            // 判断是否为节假日
+            const isHoliday = holidayData.includes(dateStr);
+            
+            // 如果是节假日或者是周末，则不是工作日
+            return !(isHoliday || isWeekend);
+        }
+        
+        // 更新倒计时
         function updateCountdown() {
             const now = new Date();
-            const day = now.getDay(); // 0是周日，1-6是周一到周六
+            const day = now.getDay(); // 0=周日, 1=周一, ..., 6=周六
             const hours = now.getHours();
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
@@ -526,35 +700,14 @@
             const countdownMessage = document.getElementById('countdownMessage');
             const countdownStatus = document.getElementById('countdownStatus');
             
-            // 定义工作日（周一至周五）
-            const isWeekday = day >= 1 && day <= 5;
-            
-            // 定义2026年的节假日（示例，你可以根据需要调整）
-            const holidays2026 = [
-                '2026-01-01', // 元旦
-                '2026-01-28', '2026-01-29', '2026-01-30', '2026-01-31', '2026-02-01', '2026-02-02', '2026-02-03', // 春节
-                '2026-04-04', '2026-04-05', '2026-04-06', // 清明节
-                '2026-05-01', '2026-05-02', '2026-05-03', // 劳动节
-                '2026-06-20', '2026-06-21', '2026-06-22', // 端午节
-                '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07', // 国庆节
-            ];
-            
-            // 获取当前日期字符串
+            // 格式化日期字符串用于节假日判断
             const currentDateStr = now.toISOString().split('T')[0];
             
-            // 检查是否是节假日
-            const isHoliday = holidays2026.includes(currentDateStr);
+            // 判断是否为工作日
+            const todayIsWorkday = isWorkday(now);
             
-            // 检查是否是周末调休的工作日（这里需要根据实际情况调整）
-            // 这里简单处理，你可以添加调休日期的逻辑
-            const extraWorkDays = []; // 添加调休的工作日，例如：['2026-10-10']
-            const isExtraWorkDay = extraWorkDays.includes(currentDateStr);
-            
-            // 判断今天是否上班
-            const shouldWorkToday = (isWeekday && !isHoliday) || isExtraWorkDay;
-            
-            if (!shouldWorkToday) {
-                // 今天不上班
+            if (!todayIsWorkday) {
+                // 今天不是工作日
                 countdownTime.textContent = "--:--:--";
                 countdownMessage.textContent = "今天不上班，好好休息！";
                 countdownStatus.textContent = "休息日";
@@ -606,12 +759,7 @@
             }
         }
         
-        // 初始更新倒计时
-        updateCountdown();
-        
-        // 每秒更新一次倒计时
-        setInterval(updateCountdown, 1000);
-
+        // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化变量
             let foods = ["快餐","拉面","油泼面","菠菜面","麻辣烫","螺蛳粉","水盆羊肉",
@@ -907,6 +1055,18 @@
             
             // 初始绘制
             drawWheel();
+            
+            // 初始化节假日数据
+            fetchHolidayData();
+            
+            // 初始更新倒计时
+            updateCountdown();
+            
+            // 每秒更新一次倒计时
+            setInterval(updateCountdown, 1000);
+            
+            // 每6小时重新获取一次节假日数据
+            setInterval(fetchHolidayData, 6 * 60 * 60 * 1000);
         });
     </script>
 </body>
