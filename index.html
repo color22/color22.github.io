@@ -99,7 +99,8 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
         
-        .container {
+        /* 移除container，将样式应用到主内容区域 */
+        .main-content {
             width: 100%;
             max-width: 1500px;
             display: flex;
@@ -391,13 +392,13 @@
         }
         
         @media (max-width: 768px) {
-            .container {
+            .main-content {
                 flex-direction: column;
             }
             
             .wheel-container {
-                width: 500px;
-                height: 500px;
+                width: 300px;
+                height: 300px;
             }
             
             h1 {
@@ -411,6 +412,10 @@
                 margin: 0 auto 20px;
                 width: 100%;
                 max-width: 300px;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
             }
         }
         
@@ -448,7 +453,8 @@
         </div>
     </div>
     
-    <div class="container">
+    <!-- 主内容区域，替代了原来的container -->
+    <div class="main-content">
         <div class="left-panel">
             <h1><i class="fas fa-utensils"></i> 都怪华子不知道吃啥</h1>
             
