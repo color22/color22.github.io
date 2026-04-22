@@ -1,105 +1,1079 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Flip Example</title>
+    <title>都怪华子不知道吃啥</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 下班倒计时样式 */
+        .countdown-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            border: 2px solid #1d3557;
+            min-width: 220px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .countdown-title {
+            font-size: 1rem;
+            color: #1d3557;
+            margin-bottom: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .countdown-time {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e63946;
+            margin: 5px 0;
+        }
+        
+        .countdown-message {
+            font-size: 0.9rem;
+            color: #2a9d8f;
+            font-weight: 600;
+        }
+        
+        .countdown-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .status-working {
+            background-color: #e9f5db;
+            color: #2a9d8f;
+        }
+        
+        .status-off {
+            background-color: #ffd6d6;
+            color: #e63946;
+        }
+        
+        .status-holiday {
+            background-color: #ffeaa7;
+            color: #e17055;
+        }
+        
+        .api-status {
+            font-size: 0.7rem;
+            margin-top: 8px;
+            color: #6c757d;
+        }
+        
+        .loading {
+            display: none;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.8s ease;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
-        .card {
-            width: 200px;
-            height: 300px;
-            perspective: 1000px;
-            position: relative;
-        }
-        .card-inner {
-            position: absolute;
+        
+        /* 移除container，将样式应用到主内容区域 */
+        .main-content {
             width: 100%;
-            height: 100%;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-        }
-        .card-front {
-            background-color: #fff;
+            max-width: 1500px;
             display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+        
+        .left-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
         }
-        .card-back {
-            background-color: #f2f2f2;
+        
+        h1 {
+            text-align: center;
+            color: #e63946;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .food-input-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #1d3557;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            transform: rotateY(180deg);
+            gap: 10px;
         }
-        #wheel {
-            width: 100px;
-            height: 100px;
-            border: 10px solid #007bff;
-            border-radius: 50%;
-            position: absolute;
-            left: 50%;
-            top: 10%;
-            transform: translate(-50%, -50%);
+        
+        .section-title i {
+            color: #e63946;
+        }
+        
+        .input-group {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            background: white;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        #flip-btn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
+        
+        input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #a8dadc;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #457b9d;
+            box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.2);
+        }
+        
+        button {
+            padding: 14px 24px;
+            background: #1d3557;
+            color: white;
+            border: none;
+            border-radius: 12px;
             cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: #457b9d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .add-btn {
+            background: #2a9d8f;
+        }
+        
+        .add-btn:hover {
+            background: #1d7879;
+        }
+        
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .spin-btn {
+            background: #e63946;
+        }
+        
+        .spin-btn:hover {
+            background: #d90429;
+        }
+        
+        .reset-btn {
+            background: #6d6875;
+        }
+        
+        .reset-btn:hover {
+            background: #5a5568;
+        }
+        
+        .current-foods {
+            background: #f1faee;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 150px;
+        }
+        
+        .food-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .food-item {
+            background: #a8dadc;
+            color: #1d3557;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .food-item i {
+            cursor: pointer;
+            color: #e63946;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto 30px;
+        }
+        
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .wheel-center {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: #1d3557;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 60px;
+            z-index: 5;
+        }
+        
+        .result {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1d3557;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .result-text {
+            color: #e63946;
+        }
+        
+        .background-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .bg-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .bg-option:hover {
+            transform: scale(1.05);
+        }
+        
+        .bg-option.active {
+            border-color: #1d3557;
+            box-shadow: 0 0 0 3px rgba(29, 53, 87, 0.2);
+        }
+        
+        .bg-1 {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .bg-2 {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        .bg-3 {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+        }
+        
+        .bg-4 {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        }
+        
+        .bg-5 {
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+        }
+        
+        .bg-6 {
+            background: linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%);
+        }
+        
+        .instructions {
+            background: rgba(29, 53, 87, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            color: #1d3557;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .countdown-container {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 0 auto 20px;
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+            }
+        }
+        
+        .spin-animation {
+            animation: spin 0.1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-message {
+            color: #6d6875;
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="flip-btn">🔄 Flip</div>
-    <div class="card" id="card">
-        <div class="card-inner">
-            <div class="card-front">
-                Food Selection
+    <!-- 下班倒计时容器 -->
+    <div class="countdown-container">
+        <div class="countdown-title">
+            <i class="fas fa-clock"></i>
+            <span>下班倒计时</span>
+        </div>
+        <div class="countdown-time" id="countdownTime">00:00:00</div>
+        <div class="countdown-message" id="countdownMessage">加载中...</div>
+        <div class="countdown-status" id="countdownStatus"></div>
+        <div class="api-status" id="apiStatus">正在获取节假日信息...</div>
+        <div class="loading" id="loadingIndicator">
+            <i class="fas fa-spinner fa-spin"></i> 更新中...
+        </div>
+    </div>
+    
+    <!-- 主内容区域，替代了原来的container -->
+    <div class="main-content">
+        <div class="left-panel">
+            <h1><i class="fas fa-utensils"></i> 都怪华子不知道吃啥</h1>
+            
+            <div class="food-input-section">
+                <div class="section-title">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>添加美食选项</span>
+                </div>
+                <p style="color: #6d6875; margin-bottom: 15px;">支持单个添加或用逗号分隔批量添加（例如：火锅, 披萨, 寿司）</p>
+                <div class="input-group">
+                    <input type="text" id="foodInput" placeholder="输入美食名称，例如：麻辣烫">
+                    <button id="addBtn" class="add-btn">
+                        <i class="fas fa-plus"></i> 添加
+                    </button>
+                </div>
+                
+                <div class="control-buttons">
+                    <button id="spinBtn" class="spin-btn">
+                        <i class="fas fa-play"></i> 开始旋转
+                    </button>
+                    <button id="resetBtn" class="reset-btn">
+                        <i class="fas fa-redo"></i> 重置所有
+                    </button>
+                </div>
             </div>
-            <div class="card-back">
-                Drink Selection
+            
+            <div class="current-foods">
+                <div class="section-title">
+                    <i class="fas fa-list"></i>
+                    <span>美食列表</span>
+                    <span id="foodCount" style="margin-left: auto; color: #e63946; font-weight: bold;">0 项</span>
+                </div>
+                <div id="foodList" class="food-list">
+                    <div class="empty-message">暂无美食，请添加美食选项</div>
+                </div>
+            </div>
+            
+            <div class="background-selector">
+                <div class="section-title">
+                    <i class="fas fa-palette"></i>
+                    <span>切换背景</span>
+                </div>
+                <div class="bg-option bg-1 active" data-bg="1"></div>
+                <div class="bg-option bg-2" data-bg="2"></div>
+                <div class="bg-option bg-3" data-bg="3"></div>
+                <div class="bg-option bg-4" data-bg="4"></div>
+                <div class="bg-option bg-5" data-bg="5"></div>
+                <div class="bg-option bg-6" data-bg="6"></div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                <div class="wheel-center">
+                    <i class="fas fa-utensils"></i>
+                </div>
+            </div>
+            
+            <div class="result">
+                <div id="resultText">等待选择...</div>
             </div>
         </div>
     </div>
-    <div id="wheel">Wheel</div>
+
     <script>
-        const card = document.getElementById('card');
-        const wheel = document.getElementById('wheel');
-        const flipBtn = document.getElementById('flip-btn');
-        let isFlipped = false;
-
-        flipBtn.addEventListener('click', () => {
-            isFlipped = !isFlipped;
-            card.classList.toggle('flipped', isFlipped);
-            updateWheel();
-        });
-
-        function updateWheel() {
-            if (isFlipped) {
-                wheel.textContent = 'Drink'; // display drink data
-            } else {
-                wheel.textContent = 'Food'; // display food data
+        // 下班倒计时功能
+        let holidayData = []; // 存储节假日数据
+        let holidayApiStatus = 'loading'; // API状态: loading, success, error
+        
+        // 获取节假日API数据
+        async function fetchHolidayData() {
+            const apiStatus = document.getElementById('apiStatus');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            try {
+                loadingIndicator.style.display = 'block';
+                apiStatus.textContent = "正在获取节假日信息...";
+                
+                // 使用多个节假日API接口，增加成功率
+                const apiUrls = [
+                    // 接口1: 聚合数据API (需要注册获取key，这里使用演示key)
+                    'https://v0.yiketianqi.com/free/day?appid=43656176&appsecret=I42og6Lm&unescape=1',
+                    // 接口2: 天气API，可获取节假日信息
+                    'https://api.oioweb.cn/api/qq/holiday',
+                    // 接口3: 备用接口
+                    'https://timor.tech/api/holiday/info/' + new Date().toISOString().split('T')[0]
+                ];
+                
+                let success = false;
+                
+                // 尝试每个接口
+                for (let i = 0; i < apiUrls.length; i++) {
+                    try {
+                        const response = await fetch(apiUrls[i], {
+                            method: 'GET',
+                            mode: 'cors',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('API响应数据:', data);
+                            
+                            // 根据不同API的返回格式解析节假日信息
+                            holidayData = parseHolidayData(data);
+                            holidayApiStatus = 'success';
+                            success = true;
+                            
+                            // 如果获取到数据，保存到localStorage
+                            localStorage.setItem('holidayData', JSON.stringify({
+                                data: holidayData,
+                                timestamp: new Date().getTime()
+                            }));
+                            
+                            apiStatus.textContent = "节假日信息已更新";
+                            break;
+                        }
+                    } catch (error) {
+                        console.log(`接口${i+1}失败:`, error);
+                        continue;
+                    }
+                }
+                
+                if (!success) {
+                    throw new Error('所有API接口都失败了');
+                }
+                
+            } catch (error) {
+                console.error('获取节假日信息失败:', error);
+                holidayApiStatus = 'error';
+                apiStatus.textContent = "节假日API获取失败，使用本地数据";
+                
+                // 尝试从localStorage获取缓存的节假日数据
+                const cachedData = localStorage.getItem('holidayData');
+                if (cachedData) {
+                    const parsedData = JSON.parse(cachedData);
+                    // 检查缓存是否在24小时内
+                    if (new Date().getTime() - parsedData.timestamp < 24 * 60 * 60 * 1000) {
+                        holidayData = parsedData.data;
+                        holidayApiStatus = 'cached';
+                        apiStatus.textContent = "使用缓存的节假日数据";
+                    }
+                }
+                
+                // 如果还是没有数据，使用内置的2026年节假日数据
+                if (holidayData.length === 0) {
+                    holidayData = getDefaultHolidays();
+                    apiStatus.textContent = "使用默认节假日数据";
+                }
+            } finally {
+                loadingIndicator.style.display = 'none';
+                // 更新倒计时显示
+                updateCountdown();
             }
         }
+        
+        // 解析不同API返回的节假日数据
+        function parseHolidayData(data) {
+            const holidays = [];
+            const currentYear = new Date().getFullYear();
+            
+            // 根据不同API的返回格式解析
+            if (data && data.data && Array.isArray(data.data)) {
+                // 格式1: 聚合数据格式
+                data.data.forEach(item => {
+                    if (item.holiday) {
+                        holidays.push(item.date);
+                    }
+                });
+            } else if (data && data.holiday) {
+                // 格式2: timor API格式
+                holidays.push(data.date);
+            } else if (data && data.list && Array.isArray(data.list)) {
+                // 格式3: 其他API格式
+                data.list.forEach(item => {
+                    if (item.isHoliday) {
+                        holidays.push(item.date);
+                    }
+                });
+            }
+            
+            // 如果没有获取到节假日，使用默认的
+            if (holidays.length === 0) {
+                return getDefaultHolidays();
+            }
+            
+            return holidays;
+        }
+        
+        // 获取默认的节假日数据（2026年）
+        function getDefaultHolidays() {
+            const currentYear = new Date().getFullYear();
+            
+            // 中国法定节假日（2026年）
+            const holidays2026 = [
+                // 元旦
+                `${currentYear}-01-01`, `${currentYear}-01-02`, `${currentYear}-01-03`,
+                // 春节
+                `${currentYear}-01-28`, `${currentYear}-01-29`, `${currentYear}-01-30`,
+                `${currentYear}-01-31`, `${currentYear}-02-01`, `${currentYear}-02-02`, `${currentYear}-02-03`,
+                // 清明节
+                `${currentYear}-04-04`, `${currentYear}-04-05`, `${currentYear}-04-06`,
+                // 劳动节
+                `${currentYear}-05-01`, `${currentYear}-05-02`, `${currentYear}-05-03`,
+                // 端午节
+                `${currentYear}-06-20`, `${currentYear}-06-21`, `${currentYear}-06-22`,
+                // 中秋节
+                `${currentYear}-10-01`, `${currentYear}-10-02`, `${currentYear}-10-03`,
+                // 国庆节
+                `${currentYear}-10-01`, `${currentYear}-10-02`, `${currentYear}-10-03`,
+                `${currentYear}-10-04`, `${currentYear}-10-05`, `${currentYear}-10-06`, `${currentYear}-10-07`
+            ];
+            
+            return holidays2026;
+        }
+        
+        // 判断是否为工作日
+        function isWorkday(date) {
+            const day = date.getDay(); // 0=周日, 1=周一, ..., 6=周六
+            const dateStr = date.toISOString().split('T')[0]; // 格式: YYYY-MM-DD
+            
+            // 判断是否为周末
+            const isWeekend = day === 0 || day === 6;
+            
+            // 判断是否为节假日
+            const isHoliday = holidayData.includes(dateStr);
+            
+            // 如果是节假日或者是周末，则不是工作日
+            return !(isHoliday || isWeekend);
+        }
+        
+        // 更新倒计时
+        function updateCountdown() {
+            const now = new Date();
+            const day = now.getDay(); // 0=周日, 1=周一, ..., 6=周六
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            const startWork = 8; // 上班时间 8:00
+            const endWork = 17; // 下班时间 17:00
+            const endWorkMinutes = 30; // 下班分钟 30
+            
+            const countdownTime = document.getElementById('countdownTime');
+            const countdownMessage = document.getElementById('countdownMessage');
+            const countdownStatus = document.getElementById('countdownStatus');
+            
+            // 格式化日期字符串用于节假日判断
+            const currentDateStr = now.toISOString().split('T')[0];
+            
+            // 判断是否为工作日
+            const todayIsWorkday = isWorkday(now);
+            
+            if (!todayIsWorkday) {
+                // 今天不是工作日
+                countdownTime.textContent = "--:--:--";
+                countdownMessage.textContent = "今天不上班，好好休息！";
+                countdownStatus.textContent = "休息日";
+                countdownStatus.className = "countdown-status status-holiday";
+                return;
+            }
+            
+            // 计算当前时间到下班时间的倒计时
+            let timeLeft = '';
+            let message = '';
+            let status = '';
+            let statusClass = '';
+            
+            // 当前总分钟数
+            const currentTotalMinutes = hours * 60 + minutes;
+            // 上班时间总分钟数
+            const startWorkMinutes = startWork * 60;
+            // 下班时间总分钟数
+            const endWorkTotalMinutes = endWork * 60 + endWorkMinutes;
+            
+            if (currentTotalMinutes < startWorkMinutes) {
+                // 还没到上班时间
+                const timeUntilWork = startWorkMinutes - currentTotalMinutes;
+                const hoursLeft = Math.floor(timeUntilWork / 60);
+                const minutesLeft = timeUntilWork % 60;
+                const secondsLeft = 60 - seconds;
+                
+                countdownTime.textContent = `${hoursLeft.toString().padStart(2, '0')}:${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+                countdownMessage.textContent = "距离上班还有";
+                countdownStatus.textContent = "还没上班";
+                countdownStatus.className = "countdown-status status-off";
+            } else if (currentTotalMinutes >= startWorkMinutes && currentTotalMinutes < endWorkTotalMinutes) {
+                // 工作时间段内
+                const timeUntilEnd = endWorkTotalMinutes - currentTotalMinutes;
+                const hoursLeft = Math.floor(timeUntilEnd / 60);
+                const minutesLeft = timeUntilEnd % 60;
+                const secondsLeft = 60 - seconds;
+                
+                countdownTime.textContent = `${hoursLeft.toString().padStart(2, '0')}:${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+                countdownMessage.textContent = "距离下班还有";
+                countdownStatus.textContent = "工作中";
+                countdownStatus.className = "countdown-status status-working";
+            } else {
+                // 下班时间后
+                countdownTime.textContent = "00:00:00";
+                countdownMessage.textContent = "下班啦，玩得开心！";
+                countdownStatus.textContent = "已下班";
+                countdownStatus.className = "countdown-status status-off";
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化变量
+            let foods = ["快餐","拉面","油泼面","菠菜面","麻辣烫","螺蛳粉","水盆羊肉",
+                         "泡馍","过桥米线","酸辣粉","饺子","三秦套餐","油条豆腐脑",
+                         "臊子面","疯狂星期四","不吃了"];
+            let isSpinning = false;
+            let currentRotation = 0;
+            let spinAnimation = null;
+            
+            // DOM元素
+            const foodInput = document.getElementById('foodInput');
+            const addBtn = document.getElementById('addBtn');
+            const spinBtn = document.getElementById('spinBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const foodList = document.getElementById('foodList');
+            const foodCount = document.getElementById('foodCount');
+            const wheelCanvas = document.getElementById('wheelCanvas');
+            const resultText = document.getElementById('resultText');
+            const ctx = wheelCanvas.getContext('2d');
+            const bgOptions = document.querySelectorAll('.bg-option');
+            
+            // 颜色数组 - 用于转盘扇区
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#FFD166', '#06D6A0', 
+                '#118AB2', '#073B4C', '#EF476F', '#7209B7',
+                '#3A86FF', '#FB5607', '#8338EC', '#FF006E'
+            ];
+            
+            // 初始化 - 添加示例数据
+            addExampleFoods();
+            
+            // 绘制转盘
+            function drawWheel() {
+                const centerX = wheelCanvas.width / 2;
+                const centerY = wheelCanvas.height / 2;
+                const radius = Math.min(centerX, centerY) - 10;
+                
+                // 清空画布
+                ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+                
+                // 如果没有食物，绘制空转盘
+                if (foods.length === 0) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#F1FAEE';
+                    ctx.fill();
+                    ctx.strokeStyle = '#1D3557';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // 绘制文本
+                    ctx.fillStyle = '#6D6875';
+                    ctx.font = 'bold 20px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('请添加美食', centerX, centerY - 10);
+                    ctx.font = '16px Arial';
+                    ctx.fillText('点击左侧"添加"按钮', centerX, centerY + 20);
+                    return;
+                }
+                
+                // 计算每个扇区的角度
+                const angleStep = (2 * Math.PI) / foods.length;
+                let startAngle = 0;
+                
+                // 绘制每个扇区
+                for (let i = 0; i < foods.length; i++) {
+                    const endAngle = startAngle + angleStep;
+                    
+                    // 绘制扇区
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                    ctx.closePath();
+                    
+                    // 设置颜色
+                    ctx.fillStyle = colors[i % colors.length];
+                    ctx.fill();
+                    
+                    // 绘制扇区边框
+                    ctx.strokeStyle = '#1D3557';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // 绘制扇区文本
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(startAngle + angleStep / 2);
+                    
+                    // 设置字体颜色为白色，添加黑色描边以提高可读性
+                    ctx.fillStyle = 'white';
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'right';
+                    
+                    // 先绘制文字描边
+                    ctx.strokeText(foods[i], radius - 20, 5);
+                    // 再绘制填充文字
+                    ctx.fillText(foods[i], radius - 20, 5);
+                    
+                    ctx.restore();
+                    
+                    startAngle = endAngle;
+                }
+            }
+            
+            // 添加食物函数
+            function addFood() {
+                const input = foodInput.value.trim();
+                if (!input) return;
+                
+                // 支持逗号分隔批量添加
+                const newFoods = input.split(',').map(food => food.trim()).filter(food => food);
+                
+                // 添加到食物数组
+                newFoods.forEach(food => {
+                    if (food && !foods.includes(food)) {
+                        foods.push(food);
+                    }
+                });
+                
+                // 清空输入框
+                foodInput.value = '';
+                
+                // 更新UI
+                updateFoodList();
+                drawWheel();
+                
+                // 更新计数
+                foodCount.textContent = `${foods.length} 项`;
+            }
+            
+            // 添加示例食物
+            function addExampleFoods() {
+                updateFoodList();
+                drawWheel();
+                foodCount.textContent = `${foods.length} 项`;
+            }
+            
+            // 更新食物列表显示
+            function updateFoodList() {
+                foodList.innerHTML = '';
+                
+                if (foods.length === 0) {
+                    foodList.innerHTML = '<div class="empty-message">暂无美食，请添加美食选项</div>';
+                    return;
+                }
+                
+                foods.forEach((food, index) => {
+                    const foodItem = document.createElement('div');
+                    foodItem.className = 'food-item';
+                    foodItem.innerHTML = `
+                        <span>${food}</span>
+                        <i class="fas fa-times delete-food" data-index="${index}"></i>
+                    `;
+                    foodList.appendChild(foodItem);
+                });
+                
+                // 添加删除事件
+                document.querySelectorAll('.delete-food').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        foods.splice(index, 1);
+                        updateFoodList();
+                        drawWheel();
+                        foodCount.textContent = `${foods.length} 项`;
+                    });
+                });
+            }
+            
+            // 旋转转盘
+            function spinWheel() {
+                if (isSpinning || foods.length === 0) return;
+                
+                isSpinning = true;
+                spinBtn.disabled = true;
+                resultText.textContent = "抽奖中...";
+                
+                // 生成随机停止位置
+                const spinDuration = 3000; // 旋转持续时间（毫秒）
+                const spins = 5 + Math.random() * 3; // 旋转圈数
+                const randomIndex = Math.floor(Math.random() * foods.length);
+                const anglePerFood = 360 / foods.length;
+                const targetAngle = 360 * spins + (randomIndex * anglePerFood);
+                
+                // 开始旋转动画
+                let startTime = null;
+                let startRotation = currentRotation;
+                
+                function animate(currentTime) {
+                    if (!startTime) startTime = currentTime;
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / spinDuration, 1);
+                    
+                    // 缓动函数，使旋转先快后慢
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    currentRotation = startRotation + (targetAngle * easeOut);
+                    
+                    // 应用旋转
+                    wheelCanvas.style.transform = `rotate(${currentRotation}deg)`;
+                    
+                    if (progress < 1) {
+                        spinAnimation = requestAnimationFrame(animate);
+                    } else {
+                        // 旋转结束
+                        isSpinning = false;
+                        spinBtn.disabled = false;
+                        currentRotation = currentRotation % 360;
+                        
+                        // 显示结果
+                        const resultIndex = foods.length - 1 - Math.floor(((currentRotation % 360) / 360) * foods.length);
+                        const selectedFood = foods[resultIndex % foods.length];
+                        
+                        resultText.innerHTML = `恭喜！选中: <span class="result-text">${selectedFood}</span>`;
+                        
+                        // 添加庆祝效果
+                        celebrate();
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // 庆祝效果
+            function celebrate() {
+                const resultElement = document.querySelector('.result');
+                resultElement.style.transform = 'scale(1.1)';
+                resultElement.style.boxShadow = '0 10px 30px rgba(230, 57, 70, 0.3)';
+                resultElement.style.transition = 'all 0.3s';
+                
+                setTimeout(() => {
+                    resultElement.style.transform = 'scale(1)';
+                    resultElement.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+                }, 500);
+            }
+            
+            // 重置所有食物
+            function resetFoods() {
+                if (isSpinning) {
+                    cancelAnimationFrame(spinAnimation);
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                }
+                
+                foods = [];
+                currentRotation = 0;
+                wheelCanvas.style.transform = 'rotate(0deg)';
+                resultText.textContent = "等待选择...";
+                updateFoodList();
+                drawWheel();
+                foodCount.textContent = "0 项";
+            }
+            
+            // 切换背景
+            function changeBackground(bgIndex) {
+                const bgClasses = [
+                    'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                    'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+                    'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
+                    'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)',
+                    'linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%)'
+                ];
+                
+                document.body.style.background = bgClasses[bgIndex - 1];
+                
+                // 更新活动状态
+                bgOptions.forEach(option => {
+                    option.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
+            
+            // 事件监听
+            addBtn.addEventListener('click', addFood);
+            
+            foodInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addFood();
+                }
+            });
+            
+            spinBtn.addEventListener('click', spinWheel);
+            
+            resetBtn.addEventListener('click', resetFoods);
+            
+            bgOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const bgIndex = this.getAttribute('data-bg');
+                    changeBackground(bgIndex);
+                });
+            });
+            
+            // 初始绘制
+            drawWheel();
+            
+            // 初始化节假日数据
+            fetchHolidayData();
+            
+            // 初始更新倒计时
+            updateCountdown();
+            
+            // 每秒更新一次倒计时
+            setInterval(updateCountdown, 1000);
+            
+            // 每6小时重新获取一次节假日数据
+            setInterval(fetchHolidayData, 6 * 60 * 60 * 1000);
+        });
     </script>
 </body>
 </html>
